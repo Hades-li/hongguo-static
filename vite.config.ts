@@ -74,6 +74,18 @@ export default defineConfig({
     ],
   },
   plugins: lazyPlugins(() => [vue(), vueDevTools()]),
+  server: {
+    proxy: {
+      // github.com 的 release 下载地址不返回 CORS 头，开发环境通过代理读取 latest*.yml
+      '/__release': {
+        target: 'https://github.com',
+        changeOrigin: true,
+        followRedirects: true,
+        rewrite: (path) =>
+          path.replace(/^\/__release/, '/Hades-li/HongguoDesktop/releases/latest/download'),
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

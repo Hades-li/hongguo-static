@@ -1,9 +1,17 @@
 <script setup lang="ts">
 // 设计稿节点 38:6 Download
 import SectionHeading from './SectionHeading.vue'
-import { downloads } from '@/config/download'
+import { downloads, RELEASES_LATEST_PAGE } from '@/config/download'
+import { useInstallerDownload } from '@/composables/useInstallerDownload'
+import { formatSize, type InstallerInfo } from '@/services/release'
 
 const cards = [downloads.mac, downloads.win]
+const { state, download } = useInstallerDownload()
+
+function startedText(installer: InstallerInfo) {
+  const size = formatSize(installer.size)
+  return `已开始下载 v${installer.version}${size ? ` · ${size}` : ''}，没反应？`
+}
 </script>
 
 <template>
@@ -27,14 +35,35 @@ const cards = [downloads.mac, downloads.win]
         <span v-else class="tag-spacer" aria-hidden="true" />
         <h3 class="os">{{ card.os }}</h3>
         <p class="info">{{ card.info }}</p>
-        <a
+        <button
+          type="button"
           class="btn"
           :class="card.recommended ? 'btn-primary' : 'btn-secondary'"
-          :href="card.url"
+          :disabled="state[card.platform].status === 'loading'"
+          :aria-busy="state[card.platform].status === 'loading'"
           :aria-label="`下载 ${card.os} 版`"
+          @click="download(card.platform)"
         >
-          下载
-        </a>
+          {{ state[card.platform].status === 'loading' ? '正在获取最新版本…' : '下载' }}
+        </button>
+
+        <p
+          v-if="state[card.platform].status === 'started' && state[card.platform].installer"
+          class="status"
+          role="status"
+        >
+          {{ startedText(state[card.platform].installer!) }}
+          <a :href="state[card.platform].installer!.url">点此重新下载</a>
+        </p>
+        <p
+          v-else-if="state[card.platform].status === 'error'"
+          class="status status--error"
+          role="alert"
+        >
+          获取最新版本失败，请前往
+          <a :href="RELEASES_LATEST_PAGE" target="_blank" rel="noopener">GitHub 发布页</a>
+          手动下载
+        </p>
       </article>
     </div>
   </section>
@@ -114,7 +143,10 @@ const cards = [downloads.mac, downloads.win]
   align-items: center;
   justify-content: center;
   padding: 15px 28px;
+  border: 0;
   border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
   color: #ffffff;
   font-size: 16px;
   font-weight: 700;
@@ -124,8 +156,31 @@ const cards = [downloads.mac, downloads.win]
     background-color 0.2s ease;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   transform: translateY(-2px);
+}
+
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.status {
+  align-self: stretch;
+  margin-top: -8px;
+  color: var(--hg-text-meta);
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.status--error {
+  color: var(--hg-brand-text);
+}
+
+.status a {
+  color: var(--hg-text-nav);
+  text-decoration: underline;
 }
 
 .btn-primary {
@@ -133,7 +188,7 @@ const cards = [downloads.mac, downloads.win]
   box-shadow: 0 8px 24px rgb(255 46 84 / 0.45);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   filter: brightness(1.08);
 }
 
@@ -142,7 +197,7 @@ const cards = [downloads.mac, downloads.win]
   background: var(--hg-btn-secondary);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: #2e2e38;
 }
 

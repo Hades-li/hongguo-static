@@ -1,7 +1,10 @@
 <script setup lang="ts">
 // 设计稿节点 38:3 Hero
 import heroShot from '@/assets/images/hero-home.webp'
-import { downloads } from '@/config/download'
+import { RELEASES_LATEST_PAGE } from '@/config/download'
+import { useInstallerDownload } from '@/composables/useInstallerDownload'
+
+const { state, download } = useInstallerDownload()
 </script>
 
 <template>
@@ -18,9 +21,35 @@ import { downloads } from '@/config/download'
     </p>
 
     <div class="ctas">
-      <a class="btn btn-primary" :href="downloads.mac.url">下载 macOS 版</a>
-      <a class="btn btn-secondary" :href="downloads.win.url">下载 Windows 版</a>
+      <button
+        type="button"
+        class="btn btn-primary"
+        :disabled="state.mac.status === 'loading'"
+        :aria-busy="state.mac.status === 'loading'"
+        @click="download('mac')"
+      >
+        {{ state.mac.status === 'loading' ? '正在获取最新版本…' : '下载 macOS 版' }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-secondary"
+        :disabled="state.win.status === 'loading'"
+        :aria-busy="state.win.status === 'loading'"
+        @click="download('win')"
+      >
+        {{ state.win.status === 'loading' ? '正在获取最新版本…' : '下载 Windows 版' }}
+      </button>
     </div>
+
+    <p
+      v-if="state.mac.status === 'error' || state.win.status === 'error'"
+      class="error"
+      role="alert"
+    >
+      获取最新版本失败，请前往
+      <a :href="RELEASES_LATEST_PAGE" target="_blank" rel="noopener">GitHub 发布页</a>
+      手动下载
+    </p>
 
     <p class="meta">
       macOS (Apple 芯片)&nbsp;&nbsp;·&nbsp;&nbsp;Windows 10 及以上&nbsp;&nbsp;·&nbsp;&nbsp;同时提供
@@ -107,7 +136,10 @@ import { downloads } from '@/config/download'
   align-items: center;
   gap: 10px;
   padding: 16px 32px;
+  border: 0;
   border-radius: 999px;
+  cursor: pointer;
+  font-family: inherit;
   color: var(--hg-text);
   font-size: 17px;
   font-weight: 700;
@@ -117,8 +149,23 @@ import { downloads } from '@/config/download'
     background-color 0.2s ease;
 }
 
-.btn:hover {
+.btn:hover:not(:disabled) {
   transform: translateY(-2px);
+}
+
+.btn:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.error {
+  color: var(--hg-brand-text);
+  font-size: 13px;
+  text-align: center;
+}
+
+.error a {
+  text-decoration: underline;
 }
 
 .btn-primary {
@@ -126,7 +173,7 @@ import { downloads } from '@/config/download'
   box-shadow: 0 8px 24px rgb(255 46 84 / 0.45);
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   filter: brightness(1.08);
 }
 
@@ -135,7 +182,7 @@ import { downloads } from '@/config/download'
   background: var(--hg-btn-secondary);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: #2e2e38;
 }
 
