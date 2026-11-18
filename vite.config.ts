@@ -6,6 +6,8 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // GitHub Pages 项目站点部署在 /<仓库名>/ 子路径下，由 CI 通过 BASE_PATH 注入；本地默认 '/'
+  base: process.env.BASE_PATH || '/',
   staged: {
     '*': 'vp check --fix',
   },
