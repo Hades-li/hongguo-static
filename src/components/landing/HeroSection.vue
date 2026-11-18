@@ -51,10 +51,7 @@ const { state, download } = useInstallerDownload()
       手动下载
     </p>
 
-    <p class="meta">
-      macOS (Apple 芯片)&nbsp;&nbsp;·&nbsp;&nbsp;Windows 10 及以上&nbsp;&nbsp;·&nbsp;&nbsp;同时提供
-      Linux 安装包
-    </p>
+    <p class="meta">macOS (Apple 芯片)&nbsp;&nbsp;·&nbsp;&nbsp;Windows 10 及以上</p>
 
     <div class="stage">
       <div class="app-window">
